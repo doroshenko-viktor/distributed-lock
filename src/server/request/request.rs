@@ -1,9 +1,6 @@
-use std::{
-    convert::TryFrom,
-    fmt::Display,
-    net::{SocketAddr, TcpStream},
-};
+use std::{convert::TryFrom, fmt::Display};
 
+use super::super::SocketData;
 use super::{errors::RequestParseError, parser, Client, LockType, Metadata, Operation};
 
 pub struct Request {
@@ -24,11 +21,11 @@ impl Display for Request {
     }
 }
 
-impl TryFrom<(&mut TcpStream, &SocketAddr)> for Request {
+impl TryFrom<&mut SocketData> for Request {
     type Error = RequestParseError;
 
-    fn try_from(value: (&mut TcpStream, &SocketAddr)) -> Result<Self, Self::Error> {
-        let body = parser::get_body(value.0)?;
+    fn try_from(value: &mut SocketData) -> Result<Self, Self::Error> {
+        let body = parser::get_body(&mut value.stream)?;
 
         let (operation, body) = parser::get_line(&body);
         let (lock_key, body) = parser::get_line(&body);
@@ -49,7 +46,7 @@ impl TryFrom<(&mut TcpStream, &SocketAddr)> for Request {
         Ok(Request {
             operation: req_operation,
             key: lock_key.to_string(),
-            client: Client::new(value.1.to_string()),
+            client: Client::new(value.client_addr.to_string()),
             lock_type: LockType::All,
             meta: None,
         })

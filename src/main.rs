@@ -1,8 +1,7 @@
 use std::process;
 
-use server::tcp_server::TcpServer;
+use server::TcpServer;
 
-pub mod request;
 pub mod server;
 
 fn main() {

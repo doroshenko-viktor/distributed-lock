@@ -1,17 +1,7 @@
-use std::{convert::TryFrom, error::Error, net::TcpListener};
+use std::{net::TcpListener, thread};
 
-use crate::request::Request;
-
-#[derive(Debug)]
-pub struct TcpServerError(pub String);
-
-impl std::fmt::Display for TcpServerError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl Error for TcpServerError {}
+use super::SocketData;
+use super::{errors::TcpServerError, socket_handler};
 
 pub struct TcpServer {
     host: String,
@@ -42,21 +32,19 @@ impl TcpServer {
 
 fn serve(listener: TcpListener) {
     loop {
-        let (mut stream, addr) = match listener.accept() {
-            Ok(res) => res,
+        let mut socket: SocketData = match listener.accept() {
+            Ok(res) => res.into(),
             Err(e) => {
                 println!("Error happened on accept connection: {}", e);
                 continue;
             }
         };
-        let request = match Request::try_from((&mut stream, &addr)) {
-            Ok(r) => r,
-            Err(e) => {
-                println!("Error during handling request: {}", e);
-                continue;
-            }
-        };
-        println!("Handling request: {}", request);
+        thread::spawn(move || {
+            match socket_handler::handle(&mut socket) {
+                Ok(_) => println!("Request for socket: {} handled successfully", &socket),
+                Err(e) => println!("Request for socket: {} handled with error: {}", &socket, e),
+            };
+        });
     }
 }
 

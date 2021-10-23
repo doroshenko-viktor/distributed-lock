@@ -4,9 +4,7 @@ use std::{
     str::Utf8Error,
 };
 
-use crate::request::errors::OperationParseError;
-
-// use super::OperationParseError;
+use super::OperationParseError;
 
 pub enum RequestParseError {
     InvalidOperation(String),
