@@ -16,12 +16,18 @@ pub fn get_line(text: &str) -> (&str, &str) {
 pub fn get_body(stream: &mut TcpStream) -> Result<String, Utf8Error> {
     let mut body = Vec::<u8>::with_capacity(1024);
     let mut buf = [0u8; 1024];
-    loop {
+    'main: loop {
         let position = match stream.read(&mut buf) {
             Ok(position) if position == 0 => break,
             Err(_) => break,
             Ok(position) => position,
         };
+        for (index, c) in buf.iter().enumerate() {
+            if c == &('!' as u8) {
+                body.extend_from_slice(&buf[..index]);
+                break 'main;
+            }
+        }
         body.extend_from_slice(&buf[..position]);
     }
     let s = str::from_utf8(&body)?.to_string();

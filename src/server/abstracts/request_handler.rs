@@ -1,5 +1,5 @@
-use super::super::{request::Request, response::Response};
+use super::super::{errors::ApplicationError, request::Request, response::Response};
 
-pub trait RequestHandler: Send+Sync+Sized+Clone {
-    fn handle(&self, request: Request) -> Response;
+pub trait RequestHandler: Send + Sync + Sized + Clone {
+    fn handle(&self, request: Request) -> Result<Response, ApplicationError>;
 }

@@ -1,5 +1,5 @@
 pub mod controllers;
 pub mod router;
-mod request_handler;
+mod application_request_handler;
 
-pub use request_handler::ApplicationRequestHandler;
+pub use application_request_handler::ApplicationRequestHandler;

@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use std::{convert::TryFrom, fmt::Display};
 
 use super::super::SocketData;

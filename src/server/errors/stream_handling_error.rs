@@ -1,11 +1,14 @@
-use std::{error::Error};
+use std::error::Error;
 
 use crate::server::request::errors::RequestParseError;
+
+use super::ApplicationError;
 
 #[derive(Debug)]
 pub enum StreamHandlingError {
     ParsingError(String),
     ApplicationError(String),
+    StreamError(String),
 }
 
 impl StreamHandlingError {
@@ -13,6 +16,7 @@ impl StreamHandlingError {
         match self {
             StreamHandlingError::ParsingError(e) => format!("Parsing error: {}", e),
             StreamHandlingError::ApplicationError(e) => format!("Application error: {}", e),
+            StreamHandlingError::StreamError(e) => format!("Stream error: {}", e),
         }
     }
 }
@@ -33,5 +37,17 @@ impl From<RequestParseError> for StreamHandlingError {
             }
             RequestParseError::InvalidEncoding => StreamHandlingError::ParsingError(e.to_string()),
         }
+    }
+}
+
+impl From<ApplicationError> for StreamHandlingError {
+    fn from(e: ApplicationError) -> Self {
+        Self::ApplicationError(e.to_string())
+    }
+}
+
+impl From<std::io::Error> for StreamHandlingError {
+    fn from(e: std::io::Error) -> Self {
+        Self::StreamError(e.to_string())
     }
 }

@@ -1,9 +1,7 @@
 use crate::server::request::Request;
+use std::io::Write;
 
-use super::{
-    abstracts::RequestHandler, errors::TcpServerError, response::Response, SocketData,
-    StreamHandlingError,
-};
+use super::{abstracts::RequestHandler, errors::TcpServerError, SocketData, StreamHandlingError};
 use std::{convert::TryFrom, net::TcpListener, thread};
 
 pub struct TcpServer {
@@ -35,7 +33,7 @@ impl TcpServer {
 
 fn serve(listener: TcpListener, handler: impl RequestHandler + 'static) {
     loop {
-        let mut socket: SocketData = match listener.accept() {
+        let socket: SocketData = match listener.accept() {
             Ok(res) => res.into(),
             Err(e) => {
                 println!("Error happened on accept connection: {}", e);
@@ -44,23 +42,21 @@ fn serve(listener: TcpListener, handler: impl RequestHandler + 'static) {
         };
         let handler = handler.clone();
         thread::spawn(move || {
-            match handle(&mut socket, handler) {
-                Ok(_) => println!("Request for socket: {} handled successfully", &socket),
-                Err(e) => println!("Request for socket: {} handled with error: {}", &socket, e),
+            match handle(socket, handler) {
+                Ok(_) => println!("Request handled successfully"),
+                Err(e) => println!("Handled with error: {}", e),
             };
         });
     }
 }
 
-fn handle(
-    socket: &mut SocketData,
-    handler: impl RequestHandler,
-) -> Result<Response, StreamHandlingError> {
-    let request = Request::try_from(socket)?;
+fn handle(mut socket: SocketData, handler: impl RequestHandler) -> Result<(), StreamHandlingError> {
+    let request = Request::try_from(&mut socket)?;
     println!("Handling request: {}", &request);
-    let result = handler.handle(request);
-    println!("Request handled with result: {}", result);
-    Ok(result)
+    let response = handler.handle(request)?;
+    println!("Request handled with result: {}", response);
+    write!(&mut socket.stream, "{}", response)?;
+    Ok(())
 }
 
 fn bind(socket_address: &String) -> Result<TcpListener, TcpServerError> {

@@ -1,7 +1,9 @@
 use std::{thread, time::Duration};
 
 use super::router;
-use crate::server::{abstracts::RequestHandler, request::Request, response::Response};
+use crate::server::{
+    abstracts::RequestHandler, errors::ApplicationError, request::Request, response::Response,
+};
 
 pub struct ApplicationRequestHandler {}
 
@@ -12,14 +14,12 @@ impl ApplicationRequestHandler {
 }
 
 impl RequestHandler for ApplicationRequestHandler {
-    fn handle(&self, request: Request) -> Response {
+    fn handle(&self, request: Request) -> Result<Response, ApplicationError> {
         // router::route(request)
         println!("Request: {} started", request);
-        thread::sleep(Duration::from_secs(10));
+        thread::sleep(Duration::from_secs(1));
         println!("Request: {} finished", request);
-        Response {
-            body: "response body".to_string(),
-        }
+        Ok(Response::new("response body".to_string()))
     }
 }
 
