@@ -1,14 +1,35 @@
+use std::borrow::Borrow;
 use std::{convert::TryFrom, fmt::Display};
 
 use super::super::SocketData;
 use super::{errors::RequestParseError, parser, Client, LockType, Metadata, Operation};
 
+pub type Key = String;
+
 pub struct Request {
     operation: Operation,
-    key: String,
+    key: Key,
     lock_type: LockType,
     client: Client,
     meta: Option<Metadata>,
+}
+
+impl Request {
+    pub fn operation(&self) -> &Operation {
+        &self.operation
+    }
+    pub fn key(&self) -> &Key {
+        &self.key
+    }
+    pub fn lock_type(&self) -> &LockType {
+        &self.lock_type
+    }
+    pub fn client(&self) -> &Client {
+        &self.client
+    }
+    pub fn meta(&self) -> Option<&Metadata> {
+        self.meta.as_ref()
+    }
 }
 
 impl Display for Request {

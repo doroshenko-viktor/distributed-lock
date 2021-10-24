@@ -1,7 +1,10 @@
-use std::{net::TcpListener, thread};
+use crate::server::request::Request;
 
-use super::SocketData;
-use super::{errors::TcpServerError, socket_handler};
+use super::{
+    abstracts::RequestHandler, errors::TcpServerError, response::Response, SocketData,
+    StreamHandlingError,
+};
+use std::{convert::TryFrom, net::TcpListener, thread};
 
 pub struct TcpServer {
     host: String,
@@ -13,11 +16,11 @@ impl TcpServer {
         TcpServer { host, port }
     }
 
-    pub fn run(&self) -> Result<(), TcpServerError> {
+    pub fn run(&self, handler: impl RequestHandler + 'static) -> Result<(), TcpServerError> {
         let socket_addr = self.get_socket_address();
         let tcp_listener = bind(&socket_addr)?;
         println!("Created tcp listener on {}", socket_addr);
-        serve(tcp_listener);
+        serve(tcp_listener, handler);
         Ok(())
     }
 
@@ -30,7 +33,7 @@ impl TcpServer {
     }
 }
 
-fn serve(listener: TcpListener) {
+fn serve(listener: TcpListener, handler: impl RequestHandler + 'static) {
     loop {
         let mut socket: SocketData = match listener.accept() {
             Ok(res) => res.into(),
@@ -39,13 +42,25 @@ fn serve(listener: TcpListener) {
                 continue;
             }
         };
+        let handler = handler.clone();
         thread::spawn(move || {
-            match socket_handler::handle(&mut socket) {
+            match handle(&mut socket, handler) {
                 Ok(_) => println!("Request for socket: {} handled successfully", &socket),
                 Err(e) => println!("Request for socket: {} handled with error: {}", &socket, e),
             };
         });
     }
+}
+
+fn handle(
+    socket: &mut SocketData,
+    handler: impl RequestHandler,
+) -> Result<Response, StreamHandlingError> {
+    let request = Request::try_from(socket)?;
+    println!("Handling request: {}", &request);
+    let result = handler.handle(request);
+    println!("Request handled with result: {}", result);
+    Ok(result)
 }
 
 fn bind(socket_address: &String) -> Result<TcpListener, TcpServerError> {
