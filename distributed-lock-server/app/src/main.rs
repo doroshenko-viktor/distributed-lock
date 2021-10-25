@@ -1,10 +1,9 @@
-use crate::app::ApplicationRequestHandler;
+mod application_request_handler;
+mod controllers;
+mod router;
 use server::TcpServer;
 use std::process;
-
-mod app;
-mod domain;
-pub mod server;
+use application_request_handler::ApplicationRequestHandler;
 
 fn main() {
     let address = "127.0.0.1".to_string();

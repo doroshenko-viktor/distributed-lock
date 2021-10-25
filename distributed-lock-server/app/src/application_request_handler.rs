@@ -1,7 +1,7 @@
 use std::{thread, time::Duration};
 
 use super::router;
-use crate::server::{
+use server::{
     abstracts::RequestHandler, errors::ApplicationError, request::Request, response::Response,
 };
 
