@@ -1,4 +1,4 @@
-use crate::server::{request::Request, response::Response};
+use server::{request::Request, response::Response};
 
 pub fn lock(request: &Request) -> Response {
     Response::new("response body".to_string())
